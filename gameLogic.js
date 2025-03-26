@@ -1,94 +1,102 @@
-// Variables pour gérer le jeu
 let words = [];
-let currentRound = 1;
-let currentWordIndex = 0;
 let currentWords = [];
-let score = 0;
-let numPlayers = 2; // Nombre de joueurs dans l'équipe (peut être ajusté)
+let currentWordIndex = 0;
+let timeLeft = 60;
+let timer;
+let isRoundActive = false;  // Pour suivre si la manche est encore active
 
-function loadWords() {
-    words = JSON.parse(localStorage.getItem("words")) || [];
-    const wordList = document.getElementById("word-list");
-    wordList.innerHTML = ""; // Effacer la liste avant de la remplir
-    words.forEach(word => {
-        const li = document.createElement("li");
-        li.textContent = word;
-        wordList.appendChild(li);
-    });
+// Fonction pour démarrer la partie
+function startGame() {
+    currentWords = [...words];  // Créer une copie des mots ajoutés
+    shuffleWords();  // Mélanger les mots de manière aléatoire
+    score = 0;
+    currentWordIndex = 0;  // Commencer à partir du premier mot
+    timeLeft = 60;  // Réinitialiser le timer
+    isRoundActive = true;  // La manche est maintenant active
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    startTimer();  // Démarrer le chronomètre
+    showNextWord();  // Afficher le premier mot
 }
 
-function addWord() {
-    const wordInput = document.getElementById("word-input");  // Récupère l'élément de saisie du mot
-    const word = wordInput.value.trim();  // Récupère le mot, en enlevant les espaces inutiles
+// Fonction pour démarrer le chronomètre
+function startTimer() {
+    timer = setInterval(function() {
+        if (isRoundActive) {
+            timeLeft--;  // Réduire le temps restant
+            document.getElementById("timer").textContent = timeLeft;
 
-    if (word) {  // Vérifie que le mot n'est pas vide
-        words.push(word);  // Ajoute le mot à la liste des mots
-        localStorage.setItem("words", JSON.stringify(words));  // Sauvegarde les mots dans LocalStorage
-        wordInput.value = "";  // Efface la saisie dans la barre de texte après l'ajout du mot
+            // Arrêter le chrono si le temps est écoulé ou si tous les mots ont été devinés
+            if (timeLeft <= 0 || currentWordIndex >= currentWords.length) {
+                clearInterval(timer);
+                alert("Le temps est écoulé ou tous les mots ont été devinés !");
+                // Afficher le bouton pour passer au tour suivant
+                document.getElementById("next-round-button").style.display = "block";
+            }
+        }
+    }, 1000);  // Met à jour toutes les secondes
+}
+
+// Mélanger les mots de manière aléatoire (Fisher-Yates shuffle)
+function shuffleWords() {
+    for (let i = currentWords.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));  // Choisir un index aléatoire
+        [currentWords[i], currentWords[j]] = [currentWords[j], currentWords[i]];  // Échanger les éléments
     }
 }
 
-function startGame() {
-    currentWords = [...words];  // Sauvegarder une copie des mots pour les 3 manches
-    score = 0;
-    currentWordIndex = 0; // Commencer à partir du premier mot
-    document.getElementById("setup").style.display = "none";
-    document.getElementById("game").style.display = "block";
-    startTimer();
-    showNextWord();
-}
-
+// Afficher le mot suivant
 function showNextWord() {
     if (currentWordIndex < currentWords.length) {
         const word = currentWords[currentWordIndex];
-        document.getElementById("current-word").textContent = word;
+        document.getElementById("current-word").textContent = word;  // Afficher le mot
     } else {
         alert("Tous les mots ont été devinés !");
-        endRound();
+        // Afficher le bouton pour passer au tour suivant
+        document.getElementById("next-round-button").style.display = "block";
     }
 }
 
+// Fonction pour quand un mot est deviné correctement
 function correctGuess() {
-    score++;
-    alert("Mot deviné correctement ! Score : " + score);
-    nextWord(); 
-}
-
-function nextWord() {
-    currentWordIndex++;
-    if (currentWordIndex >= currentWords.length) {
+    currentWordIndex++;  // Passer au mot suivant
+    if (currentWordIndex < currentWords.length) {
+        showNextWord();  // Afficher le mot suivant
+    } else {
         alert("Tous les mots ont été devinés !");
-        endRound();
-    } else {
-        showNextWord();
+        // Afficher le bouton pour passer au tour suivant
+        document.getElementById("next-round-button").style.display = "block";
     }
 }
 
-function endRound() {
-    if (currentRound < 3) {
-        currentRound++;
-        currentWordIndex = 0;
-        showNextWord();
+// Passer au mot suivant sans augmenter le score (lorsqu'un mot est passé sans être deviné)
+function nextWord() {
+    if (currentWordIndex < currentWords.length) {
+        currentWordIndex++;  // Passer au mot suivant
+        showNextWord();  // Afficher le mot suivant
     } else {
-        alert("La partie est terminée ! Score final : " + score);
-        resetGame();
+        alert("Tous les mots ont été devinés !");
+        // Afficher le bouton pour passer au tour suivant
+        document.getElementById("next-round-button").style.display = "block";
     }
 }
 
-function resetGame() {
-    localStorage.removeItem("words");
-    words = [];
-    currentRound = 1;
+// Fonction pour finir la manche et passer au tour suivant
+function passToNextRound() {
+    document.getElementById("next-round-button").style.display = "none";  // Cacher le bouton
+    startNextTurn();  // Passer au tour suivant
+}
+
+// Fonction pour passer au tour suivant
+function startNextTurn() {
+    // Réinitialiser le chrono
+    timeLeft = 60;
+    startTimer();
+
+    // Passer le tour au joueur suivant de l'équipe actuelle
     currentWordIndex = 0;
-    score = 0;
-    document.getElementById("setup").style.display = "block";
-    document.getElementById("game").style.display = "none";
-}
+    showNextWord(); // Afficher le mot pour le nouveau joueur à faire deviner
 
-function resetWords() {
-    localStorage.removeItem("words");
-    words = [];
-    loadWords();
+    // Afficher qui joue
+    console.log(`C'est le tour de l'équipe, joueur ${currentPlayerIndex + 1}`);
 }
-
-window.onload = loadWords;

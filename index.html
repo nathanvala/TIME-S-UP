@@ -14,7 +14,6 @@
         <label for="word-input">Entrez un mot :</label>
         <input type="text" id="word-input" placeholder="Tapez un mot">
         <button onclick="addWord()">Ajouter</button>
-    
 
         <button onclick="startGame()">Commencer la partie</button>
     </div>
@@ -25,11 +24,13 @@
         <p id="current-word"></p>
         <p><strong>Temps restant : <span id="timer">60</span> secondes</strong></p>
 
-        <!-- Boutons pour valider un mot ou passer -->
-        <button onclick="correctGuess()">Mot deviné correctement</button>
-        <button onclick="nextWord()">Passer au mot suivant</button>
+        <button onclick="correctGuess()">Mot deviné</button>
+        <button onclick="nextWord()">Mot suivant</button>
 
         <button onclick="endRound()">Fin de la manche</button>
+        
+        <!-- Bouton pour passer au tour suivant -->
+        <button id="next-round-button" style="display:none;" onclick="passToNextRound()">Passer au tour suivant</button>
     </div>
 
     <!-- Réinitialisation -->
